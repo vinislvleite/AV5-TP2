@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Cliente {
+  id             Int         @id @default(autoincrement())
+  nome           String
+  nomeSocial     String
+  dataNascimento DateTime
+  dataCadastro   DateTime    @default(now())
+
+  // Auto-referência: titular -> dependentes
+  titularId      Int?
+  titular        Cliente?    @relation("TitularDependentes", fields: [titularId], references: [id], onDelete: Cascade)
+  dependentes    Cliente[]   @relation("TitularDependentes")
+
+  telefones      Telefone[]
+  endereco       Endereco?
+  documentos     Documento[]
+
+  // Vários clientes (titular + dependentes) podem estar na mesma acomodação
+  acomodacaoId   Int?
+  acomodacao     Acomodacao? @relation(fields: [acomodacaoId], references: [id], onDelete: SetNull)
+
+  @@map("clientes")
+}
+
+model Telefone {
+  id        Int     @id @default(autoincrement())
+  ddd       String
+  numero    String
+  clienteId Int
+  cliente   Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  @@map("telefones")
+}
+
+model Endereco {
+  id           Int     @id @default(autoincrement())
+  rua          String
+  bairro       String
+  cidade       String
+  estado       String
+  pais         String
+  codigoPostal String
+  clienteId    Int     @unique
+  cliente      Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  @@map("enderecos")
+}
+
+model Documento {
+  id            Int           @id @default(autoincrement())
+  numero        String
+  tipo          TipoDocumento
+  dataExpedicao DateTime
+  clienteId     Int
+  cliente       Cliente       @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  @@map("documentos")
+}
+
+model Acomodacao {
+  id           Int            @id @default(autoincrement())
+  nome         NomeAcomodacao
+  camaSolteiro Int
+  camaCasal    Int
+  suite        Int
+  climatizacao Boolean
+  garagem      Int
+
+  // Uma acomodação pode ter titular + dependentes hospedados
+  clientes     Cliente[]
+
+  @@map("acomodacoes")
+}
+
+enum TipoDocumento {
+  CPF
+  RG
+  PASSAPORTE
+}
+
+enum NomeAcomodacao {
+  CASAL_SIMPLES
+  FAMILIA_MAIS
+  FAMILIA_SIMPLES
+  FAMILIA_SUPER
+  SOLTEIRO_MAIS
+  SOLTEIRO_SIMPLES
+}
