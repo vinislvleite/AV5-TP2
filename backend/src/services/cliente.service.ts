@@ -1,4 +1,4 @@
-import prisma from '../prisma/client'
+import prisma from '../prisma/clientPrisma'
 import {
   CadastrarTitularDTO,
   CadastrarDependenteDTO,
@@ -7,7 +7,6 @@ import {
 
 export class ClienteService {
 
-  // ─── TITULARES ──────────────────────────────────────────────────────────────
 
   async listarTitulares() {
     return prisma.cliente.findMany({
