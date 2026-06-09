@@ -2,10 +2,10 @@ import express from 'express'
 import cors from 'cors'
 import 'dotenv/config'
 
-import clienteRoutes from './src/routes/clienteRoutes'
-import documentoRoutes from './src/routes/documentoRoutes'
-import enderecoRoutes from './src/routes/enderecoRoutes'
-import acomodacaoRoutes from './src/routes/acomodacaoRoutes'
+import clienteRoutes from './routes/clienteRoutes'
+import documentoRoutes from './routes/documentoRoutes'
+import enderecoRoutes from './routes/enderecoRoutes'
+import acomodacaoRoutes from './routes/acomodacaoRoutes'
 
 const app = express()
 const PORT = process.env.PORT || 3333
@@ -13,13 +13,11 @@ const PORT = process.env.PORT || 3333
 app.use(cors())
 app.use(express.json())
 
-// Rotas
 app.use('/api/clientes', clienteRoutes)
 app.use('/api', documentoRoutes)
 app.use('/api', enderecoRoutes)
 app.use('/api/acomodacoes', acomodacaoRoutes)
 
-// Health check
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', sistema: 'Atlantis' })
 })
