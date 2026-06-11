@@ -1,31 +1,38 @@
 import { useEffect, useState } from 'react'
 import { Plus, Trash2, Link, X } from 'lucide-react'
 import { api } from '../services/api'
-import type { Acomodacao, Cliente, NomeAcomodacao } from '../types'
+import type { Acomodacao, Cliente} from '../types/index'
 import {
-  PageHeader, Button, Card, Modal, Input, Select,
-  FormGrid, Badge, EmptyState, Toast,
+  PageHeader, Button, Card, Modal, Select,
+  Badge, EmptyState, Toast,
 } from '../components/ui'
 
 const nomeOptions = [
-  { value: 'CASAL_SIMPLES', label: 'Casal Simples' },
-  { value: 'FAMILIA_MAIS', label: 'Família Mais' },
-  { value: 'FAMILIA_SIMPLES', label: 'Família Simples' },
-  { value: 'FAMILIA_SUPER', label: 'Família Super' },
-  { value: 'SOLTEIRO_MAIS', label: 'Solteiro Mais' },
+  { value: 'CASAL_SIMPLES',    label: 'Casal Simples' },
+  { value: 'FAMILIA_SIMPLES',  label: 'Família Simples' },
+  { value: 'FAMILIA_MAIS',     label: 'Família Mais' },
+  { value: 'FAMILIA_SUPER',    label: 'Família Super' },
   { value: 'SOLTEIRO_SIMPLES', label: 'Solteiro Simples' },
+  { value: 'SOLTEIRO_MAIS',    label: 'Solteiro Mais' },
 ]
 
 const nomeLabel: Record<string, string> = Object.fromEntries(nomeOptions.map(o => [o.value, o.label]))
 
-const emptyForm = {
-  nome: '' as NomeAcomodacao | '',
-  camaSolteiro: '0', camaCasal: '0', suite: '0',
-  climatizacao: 'false', garagem: '0',
+// Specs fixas por tipo — espelho da Tabela 1
+const SPECS: Record<string, { camaSolteiro: number; camaCasal: number; suite: number; climatizacao: boolean; garagem: number }> = {
+  CASAL_SIMPLES:    { camaSolteiro: 0, camaCasal: 1, suite: 1, climatizacao: true, garagem: 1 },
+  FAMILIA_SIMPLES:  { camaSolteiro: 2, camaCasal: 1, suite: 1, climatizacao: true, garagem: 1 },
+  FAMILIA_MAIS:     { camaSolteiro: 5, camaCasal: 1, suite: 2, climatizacao: true, garagem: 2 },
+  FAMILIA_SUPER:    { camaSolteiro: 6, camaCasal: 2, suite: 3, climatizacao: true, garagem: 2 },
+  SOLTEIRO_SIMPLES: { camaSolteiro: 1, camaCasal: 0, suite: 1, climatizacao: true, garagem: 0 },
+  SOLTEIRO_MAIS:    { camaSolteiro: 0, camaCasal: 1, suite: 1, climatizacao: true, garagem: 1 },
 }
 
 const emptyVincular = {
-  nomeTitular: '', acomodacaoId: 0, titularFicara: true, nomesDependentes: [] as string[], inputDep: '',
+  nomeTitular: '',
+  acomodacaoId: 0,
+  titularFicara: true,
+  nomesDependentes: [] as string[],
 }
 
 export default function Acomodacoes() {
@@ -33,7 +40,7 @@ export default function Acomodacoes() {
   const [titulares, setTitulares] = useState<Cliente[]>([])
   const [showModal, setShowModal] = useState(false)
   const [showVincular, setShowVincular] = useState(false)
-  const [form, setForm] = useState(emptyForm)
+  const [nomeSelected, setNomeSelected] = useState('')
   const [vincular, setVincular] = useState(emptyVincular)
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
   const [loading, setLoading] = useState(false)
@@ -48,20 +55,13 @@ export default function Acomodacoes() {
   useEffect(() => { carregar() }, [])
 
   const criarAcomodacao = async () => {
-    if (!form.nome) return setToast({ msg: 'Selecione o tipo de acomodação', type: 'error' })
+    if (!nomeSelected) return setToast({ msg: 'Selecione o tipo de acomodação', type: 'error' })
     setLoading(true)
     try {
-      await api.acomodacoes.criar({
-        nome: form.nome,
-        camaSolteiro: Number(form.camaSolteiro),
-        camaCasal: Number(form.camaCasal),
-        suite: Number(form.suite),
-        climatizacao: form.climatizacao === 'true',
-        garagem: Number(form.garagem),
-      })
+      await api.acomodacoes.criar({ nome: nomeSelected })
       setToast({ msg: 'Acomodação criada!', type: 'success' })
       setShowModal(false)
-      setForm(emptyForm)
+      setNomeSelected('')
       carregar()
     } catch (e: any) {
       setToast({ msg: e.message, type: 'error' })
@@ -109,22 +109,20 @@ export default function Acomodacoes() {
     } catch (e: any) { setToast({ msg: e.message, type: 'error' }) }
   }
 
-  // Busca titular selecionado pelo nome para mostrar dependentes
   const titularSelecionado = titulares.find(
     t => t.nome.toLowerCase() === vincular.nomeTitular.toLowerCase()
   )
 
-  const adicionarDep = (nome: string) => {
-    if (!nome.trim()) return
-    if (vincular.nomesDependentes.includes(nome)) return
-    setVincular(p => ({ ...p, nomesDependentes: [...p.nomesDependentes, nome], inputDep: '' }))
+  const toggleDep = (nome: string) => {
+    setVincular(p => ({
+      ...p,
+      nomesDependentes: p.nomesDependentes.includes(nome)
+        ? p.nomesDependentes.filter(d => d !== nome)
+        : [...p.nomesDependentes, nome],
+    }))
   }
 
-  const removerDep = (nome: string) => {
-    setVincular(p => ({ ...p, nomesDependentes: p.nomesDependentes.filter(d => d !== nome) }))
-  }
-
-  const f = (k: keyof typeof emptyForm) => (v: string) => setForm(p => ({ ...p, [k]: v }))
+  const specs = nomeSelected ? SPECS[nomeSelected] : null
 
   return (
     <div>
@@ -143,6 +141,7 @@ export default function Acomodacoes() {
             const titular = ocupada
               ? titulares.find(t => t.acomodacaoId === a.id || t.dependentes?.some(d => d.acomodacaoId === a.id))
               : null
+
             return (
               <Card key={a.id}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
@@ -155,17 +154,17 @@ export default function Acomodacoes() {
                   <Badge label={ocupada ? 'Ocupada' : 'Livre'} color={ocupada ? 'warning' : 'success'} />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
+                {/* Specs read-only */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
                   {[
                     { label: 'Cama Solteiro', val: a.camaSolteiro },
-                    { label: 'Cama Casal', val: a.camaCasal },
-                    { label: 'Suíte', val: a.suite },
-                    { label: 'Garagem', val: a.garagem },
-                    { label: 'Climatização', val: a.climatizacao ? 'Sim' : 'Não' },
+                    { label: 'Cama Casal',    val: a.camaCasal },
+                    { label: 'Suíte',         val: a.suite },
+                    { label: 'Garagem',       val: a.garagem },
+                    { label: 'Climatização',  val: a.climatizacao ? 'Sim' : 'Não' },
                   ].map(item => (
                     <div key={item.label} style={{
-                      background: 'var(--bg3)', borderRadius: 8, padding: '8px 12px',
-                      textAlign: 'center',
+                      background: 'var(--bg3)', borderRadius: 8, padding: '8px 10px', textAlign: 'center',
                     }}>
                       <div style={{ fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-head)', color: 'var(--accent)' }}>
                         {item.val}
@@ -179,50 +178,70 @@ export default function Acomodacoes() {
                   <div style={{
                     background: 'var(--bg3)', borderRadius: 8, padding: '8px 12px',
                     marginBottom: 12, fontSize: 12, color: 'var(--text2)',
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
                   }}>
                     Titular: <span style={{ color: 'var(--text)', fontWeight: 500 }}>{titular.nome}</span>
                   </div>
                 )}
 
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {!ocupada ? (
-                    <Button size="sm" onClick={() => abrirVincular(a)} style={{ flex: 1 }}>
-                      <Link size={12} /> Vincular
-                    </Button>
-                  ) : titular ? (
-                    <Button size="sm" variant="secondary" onClick={() => cancelarAcomodacao(titular.nome)} style={{ flex: 1 }}>
-                      <X size={12} /> Cancelar
-                    </Button>
-                  ) : null}
-                  <Button size="sm" variant="danger" onClick={() => excluir(a.id)}>
-                    <Trash2 size={12} />
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                {!ocupada ? (
+                  <Button size="sm" onClick={() => abrirVincular(a)}>
+                    <Link size={12} /> Vincular
                   </Button>
-                </div>
+                ) : titular ? (
+                  <Button size="sm" variant="secondary" onClick={() => cancelarAcomodacao(titular.nome)}>
+                    <X size={12} /> Cancelar
+                  </Button>
+                ) : null}
+                <Button size="sm" variant="danger" onClick={() => excluir(a.id)}>
+                  <Trash2 size={12} />
+                </Button>
+              </div>
               </Card>
             )
           })}
         </div>
       )}
 
-      {/* Modal criar acomodação */}
+      {/* Modal criar — só select de tipo */}
       {showModal && (
-        <Modal title="Nova Acomodação" onClose={() => setShowModal(false)}>
+        <Modal title="Nova Acomodação" onClose={() => { setShowModal(false); setNomeSelected('') }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <Select label="Tipo de Acomodação" value={form.nome} onChange={f('nome')} options={nomeOptions} required />
-            <FormGrid>
-              <Select label="Climatização" value={form.climatizacao} onChange={f('climatizacao')} options={[
-                { value: 'true', label: 'Sim' }, { value: 'false', label: 'Não' },
-              ]} />
-              <Input label="Garagem (vagas)" value={form.garagem} onChange={f('garagem')} type="number" />
-            </FormGrid>
-            <FormGrid cols={3}>
-              <Input label="Camas Solteiro" value={form.camaSolteiro} onChange={f('camaSolteiro')} type="number" />
-              <Input label="Camas Casal" value={form.camaCasal} onChange={f('camaCasal')} type="number" />
-              <Input label="Suítes" value={form.suite} onChange={f('suite')} type="number" />
-            </FormGrid>
+            <Select
+              label="Tipo de Acomodação"
+              value={nomeSelected}
+              onChange={setNomeSelected}
+              options={nomeOptions}
+              required
+            />
+
+            {/* Preview read-only das specs */}
+            {specs && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                {[
+                  { label: 'Cama Solteiro', val: specs.camaSolteiro },
+                  { label: 'Cama Casal',    val: specs.camaCasal },
+                  { label: 'Suíte',         val: specs.suite },
+                  { label: 'Garagem',       val: specs.garagem },
+                  { label: 'Climatização',  val: specs.climatizacao ? 'Sim' : 'Não' },
+                ].map(item => (
+                  <div key={item.label} style={{
+                    background: 'var(--bg3)', borderRadius: 8, padding: '10px', textAlign: 'center',
+                    border: '1px solid var(--border)',
+                  }}>
+                    <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-head)', color: 'var(--accent)' }}>
+                      {item.val}
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 2 }}>{item.label}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <Button variant="secondary" onClick={() => setShowModal(false)}>Cancelar</Button>
-              <Button onClick={criarAcomodacao} disabled={loading}>
+              <Button variant="secondary" onClick={() => { setShowModal(false); setNomeSelected('') }}>Cancelar</Button>
+              <Button onClick={criarAcomodacao} disabled={loading || !nomeSelected}>
                 {loading ? 'Criando...' : 'Criar'}
               </Button>
             </div>
@@ -234,9 +253,20 @@ export default function Acomodacoes() {
       {showVincular && (
         <Modal title="Vincular Acomodação" onClose={() => setShowVincular(false)}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <Input label="Nome do Titular" value={vincular.nomeTitular}
-              onChange={v => setVincular(p => ({ ...p, nomeTitular: v }))}
-              placeholder="Digite o nome do titular" required />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <label style={{ fontSize: 12, color: 'var(--text2)', fontWeight: 500 }}>
+                Nome do Titular <span style={{ color: 'var(--accent)' }}>*</span>
+              </label>
+              <input
+                value={vincular.nomeTitular}
+                onChange={e => setVincular(p => ({ ...p, nomeTitular: e.target.value, nomesDependentes: [] }))}
+                placeholder="Digite o nome do titular"
+                style={{
+                  background: 'var(--bg3)', border: '1px solid var(--border)',
+                  borderRadius: 8, padding: '9px 12px', color: 'var(--text)', fontSize: 14,
+                }}
+              />
+            </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <input
@@ -251,20 +281,19 @@ export default function Acomodacoes() {
               </label>
             </div>
 
-            {/* Dependentes do titular */}
             {titularSelecionado && (titularSelecionado.dependentes?.length || 0) > 0 && (
               <div>
                 <div style={{ fontSize: 12, color: 'var(--text2)', fontWeight: 500, marginBottom: 8 }}>
                   DEPENDENTES DE {titularSelecionado.nome.toUpperCase()}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {titularSelecionado.dependentes?.map(d => (
                     <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <input
                         type="checkbox"
                         id={`dep-${d.id}`}
                         checked={vincular.nomesDependentes.includes(d.nome)}
-                        onChange={e => e.target.checked ? adicionarDep(d.nome) : removerDep(d.nome)}
+                        onChange={() => toggleDep(d.nome)}
                         style={{ accentColor: 'var(--accent)', width: 16, height: 16 }}
                       />
                       <label htmlFor={`dep-${d.id}`} style={{ fontSize: 13, color: 'var(--text2)', cursor: 'pointer' }}>
@@ -276,39 +305,8 @@ export default function Acomodacoes() {
               </div>
             )}
 
-            {/* Dependentes selecionados manualmente (se não encontrou o titular ainda) */}
-            {!titularSelecionado && (
-              <div>
-                <div style={{ fontSize: 12, color: 'var(--text2)', fontWeight: 500, marginBottom: 8 }}>
-                  ADICIONAR DEPENDENTES
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input
-                    value={vincular.inputDep}
-                    onChange={e => setVincular(p => ({ ...p, inputDep: e.target.value }))}
-                    onKeyDown={e => e.key === 'Enter' && adicionarDep(vincular.inputDep)}
-                    placeholder="Nome do dependente"
-                    style={{
-                      flex: 1, background: 'var(--bg3)', border: '1px solid var(--border)',
-                      borderRadius: 8, padding: '9px 12px', color: 'var(--text)', fontSize: 14,
-                    }}
-                  />
-                  <Button size="sm" onClick={() => adicionarDep(vincular.inputDep)}>
-                    <Plus size={13} />
-                  </Button>
-                </div>
-                {vincular.nomesDependentes.map(nome => (
-                  <div key={nome} style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    background: 'var(--bg3)', borderRadius: 7, padding: '6px 12px', marginTop: 6,
-                  }}>
-                    <span style={{ fontSize: 13 }}>{nome}</span>
-                    <button onClick={() => removerDep(nome)} style={{
-                      background: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 16,
-                    }}>×</button>
-                  </div>
-                ))}
-              </div>
+            {titularSelecionado && (titularSelecionado.dependentes?.length || 0) === 0 && (
+              <p style={{ fontSize: 12, color: 'var(--text3)' }}>Esse titular não possui dependentes.</p>
             )}
 
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>

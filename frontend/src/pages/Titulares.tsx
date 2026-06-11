@@ -8,9 +8,24 @@ import {
 } from '../components/ui'
 
 const emptyForm = {
-  nome: '', nomeSocial: '', dataNascimento: '',
-  rua: '', bairro: '', cidade: '', estado: '', pais: 'Brasil', codigoPostal: '',
-  ddd: '', numero: '',
+  nome: '',
+  nomeSocial: '',
+  dataNascimento: '',
+  rua: '',
+  bairro: '',
+  cidade: '',
+  estado: '',
+  pais: 'Brasil',
+  codigoPostal: '',
+  ddd: '',
+  numero: '',
+  documentos: [
+    {
+      tipo: 'CPF',
+      numero: '',
+      dataExpedicao: '',
+    },
+  ],
 }
 
 export default function Titulares() {
@@ -36,45 +51,139 @@ export default function Titulares() {
 
   const abrirEditar = (t: Cliente) => {
     setEditando(t)
+
     setForm({
-      nome: t.nome, nomeSocial: t.nomeSocial,
+      nome: t.nome,
+      nomeSocial: t.nomeSocial,
       dataNascimento: t.dataNascimento?.slice(0, 10) || '',
-      rua: t.endereco?.rua || '', bairro: t.endereco?.bairro || '',
-      cidade: t.endereco?.cidade || '', estado: t.endereco?.estado || '',
-      pais: t.endereco?.pais || 'Brasil', codigoPostal: t.endereco?.codigoPostal || '',
-      ddd: t.telefones?.[0]?.ddd || '', numero: t.telefones?.[0]?.numero || '',
+      rua: t.endereco?.rua || '',
+      bairro: t.endereco?.bairro || '',
+      cidade: t.endereco?.cidade || '',
+      estado: t.endereco?.estado || '',
+      pais: t.endereco?.pais || 'Brasil',
+      codigoPostal: t.endereco?.codigoPostal || '',
+      ddd: t.telefones?.[0]?.ddd || '',
+      numero: t.telefones?.[0]?.numero || '',
+      documentos:
+        t.documentos?.length
+          ? t.documentos.map(doc => ({
+              tipo: doc.tipo,
+              numero: doc.numero,
+              dataExpedicao: doc.dataExpedicao?.slice(0, 10) || '',
+            }))
+          : [
+              {
+                tipo: 'CPF',
+                numero: '',
+                dataExpedicao: '',
+              },
+            ],
     })
+
     setShowModal(true)
   }
 
-  const salvar = async () => {
-    setLoading(true)
-    try {
-      const payload = {
-        nome: form.nome,
-        nomeSocial: form.nomeSocial,
-        dataNascimento: form.dataNascimento,
-        endereco: form.rua ? {
-          rua: form.rua, bairro: form.bairro, cidade: form.cidade,
-          estado: form.estado, pais: form.pais, codigoPostal: form.codigoPostal,
-        } : undefined,
-        telefones: form.ddd && form.numero ? [{ ddd: form.ddd, numero: form.numero }] : undefined,
-      }
-      if (editando) {
-        await api.titulares.editar(editando.id, payload)
-        setToast({ msg: 'Titular atualizado!', type: 'success' })
-      } else {
-        await api.titulares.criar(payload)
-        setToast({ msg: 'Titular cadastrado!', type: 'success' })
-      }
-      setShowModal(false)
-      carregar()
-    } catch (e: any) {
-      setToast({ msg: e.message, type: 'error' })
-    } finally {
-      setLoading(false)
-    }
+  const adicionarDocumento = () => {
+  setForm(prev => ({
+    ...prev,
+    documentos: [
+      ...prev.documentos,
+      {
+        tipo: 'CPF',
+        numero: '',
+        dataExpedicao: '',
+      },
+    ],
+  }))
+}
+
+  const removerDocumento = (index: number) => {
+    if (form.documentos.length === 1) return
+
+    setForm(prev => ({
+      ...prev,
+      documentos: prev.documentos.filter((_, i) => i !== index),
+    }))
   }
+
+  const alterarDocumento = (
+    index: number,
+    campo: 'tipo' | 'numero' | 'dataExpedicao',
+    valor: string
+  ) => {
+    setForm(prev => ({
+      ...prev,
+      documentos: prev.documentos.map((doc, i) =>
+        i === index
+          ? { ...doc, [campo]: valor }
+          : doc
+      ),
+    }))
+  }
+
+  const salvar = async () => {
+  setLoading(true)
+
+  try {
+    if (form.documentos.length === 0) {
+      throw new Error('É obrigatório possuir ao menos um documento')
+    }
+
+    if (form.documentos.some(d => !d.numero.trim())) {
+      throw new Error('Preencha todos os documentos')
+    }
+
+    const payload = {
+      nome: form.nome,
+      nomeSocial: form.nomeSocial,
+      dataNascimento: form.dataNascimento,
+
+      endereco: form.rua
+        ? {
+            rua: form.rua,
+            bairro: form.bairro,
+            cidade: form.cidade,
+            estado: form.estado,
+            pais: form.pais,
+            codigoPostal: form.codigoPostal,
+          }
+        : undefined,
+
+      telefones:
+        form.ddd && form.numero
+          ? [
+              {
+                ddd: form.ddd,
+                numero: form.numero,
+              },
+            ]
+          : undefined,
+
+      documentos: form.documentos,
+    }
+
+    if (editando) {
+      await api.titulares.editar(editando.id, payload)
+      setToast({ msg: 'Titular atualizado!', type: 'success' })
+    } else {
+      await api.titulares.criar(payload)
+      setToast({ msg: 'Titular cadastrado!', type: 'success' })
+    }
+
+    setShowModal(false)
+    setEditando(null)
+    setForm(emptyForm)
+
+    carregar()
+  } catch (e: any) {
+    setToast({
+      msg: e?.message || 'Erro ao salvar titular',
+      type: 'error',
+    })
+  } finally {
+    setLoading(false)
+  }
+}
 
   const excluir = async (id: number, nome: string) => {
     if (!confirm(`Excluir "${nome}" e todos os seus dependentes?`)) return
@@ -131,10 +240,18 @@ export default function Titulares() {
                     ? <Badge label="Acomodado" color="success" />
                     : <Badge label="Disponível" color="neutral" />
                   }
-                  <Button size="sm" variant="secondary" onClick={() => abrirEditar(t)}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => abrirEditar(t)}
+                  >
                     <Pencil size={12} />
                   </Button>
-                  <Button size="sm" variant="danger" onClick={() => excluir(t.id, t.nome)}>
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    onClick={() => excluir(t.id, t.nome)}
+                  >
                     <Trash2 size={12} />
                   </Button>
                   {expandido === t.id
@@ -175,8 +292,8 @@ export default function Titulares() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--accent)', fontSize: 12, fontWeight: 600, marginBottom: 8 }}>
                         <FileText size={13} /> DOCUMENTOS
                       </div>
-                      {t.documentos?.map(doc => (
-                        <div key={doc.id} style={{ color: 'var(--text2)', fontSize: 13 }}>
+                      {t.documentos?.map((doc, i) => (
+                        <div key={doc.id || i} style={{ color: 'var(--text2)', fontSize: 13 }}>
                           {doc.tipo}: {doc.numero}
                         </div>
                       ))}
@@ -205,6 +322,85 @@ export default function Titulares() {
               <Input label="Nome Social" value={form.nomeSocial} onChange={f('nomeSocial')} required />
             </FormGrid>
             <Input label="Data de Nascimento" value={form.dataNascimento} onChange={f('dataNascimento')} type="date" required />
+
+            <Divider label="DOCUMENTOS" />
+
+{form.documentos.map((doc, index) => (
+  <div
+    key={index}
+    style={{
+      border: '1px solid var(--border)',
+      borderRadius: 10,
+      padding: 12,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 12,
+    }}
+  >
+    <FormGrid>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <label style={{ fontSize: 13 }}>
+          Tipo
+        </label>
+
+        <select
+          value={doc.tipo}
+          onChange={(e) =>
+            alterarDocumento(index, 'tipo', e.target.value)
+          }
+          style={{
+            background: 'var(--bg3)',
+            border: '1px solid var(--border)',
+            borderRadius: 8,
+            padding: '9px 12px',
+            color: 'var(--text)',
+            fontSize: 14,
+            width: '100%',
+            cursor: 'pointer',
+          }}
+        >
+          <option value="CPF">CPF</option>
+          <option value="RG">RG</option>
+          <option value="PASSAPORTE">PASSAPORTE</option>
+        </select>
+      </div>
+
+      <Input
+        label="Número"
+        value={doc.numero}
+        onChange={(v) =>
+          alterarDocumento(index, 'numero', v)
+        }
+      />
+    </FormGrid>
+
+    <Input
+      label="Data de Expedição"
+      type="date"
+      value={doc.dataExpedicao}
+      onChange={(v) =>
+        alterarDocumento(index, 'dataExpedicao', v)
+      }
+    />
+
+    <Button
+      variant="danger"
+      disabled={form.documentos.length === 1}
+      onClick={() => removerDocumento(index)}
+    >
+      <Trash2 size={12} />
+      Remover Documento
+    </Button>
+  </div>
+))}
+
+<Button
+  variant="secondary"
+  onClick={adicionarDocumento}
+>
+  <Plus size={12} />
+  Adicionar Documento
+</Button>
 
             <Divider label="ENDEREÇO" />
             <FormGrid>

@@ -28,8 +28,9 @@ export interface CadastrarTitularDTO {
   nome: string
   nomeSocial: string
   dataNascimento: string
-  endereco: EnderecoDTO
-  telefones: TelefoneDTO[]
+  endereco?: EnderecoDTO
+  telefones?: TelefoneDTO[]
+  documentos: DocumentoDTO[]
 }
 
 export interface EditarClienteDTO {
@@ -38,6 +39,7 @@ export interface EditarClienteDTO {
   dataNascimento?: string
   endereco?: EnderecoDTO
   telefones?: TelefoneEditDTO[]
+  documentos?: DocumentoDTO[]
 }
 
 export interface CadastrarDependenteDTO {
@@ -46,4 +48,5 @@ export interface CadastrarDependenteDTO {
   dataNascimento: string
   endereco?: EnderecoDTO
   telefones?: TelefoneDTO[]
+  documentos: DocumentoDTO[]
 }

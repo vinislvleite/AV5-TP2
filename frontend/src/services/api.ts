@@ -12,7 +12,6 @@ async function http<T>(url: string, options?: RequestInit): Promise<T> {
   return res.json()
 }
 
-// ─── TITULARES ───────────────────────────────────────────────────────────────
 export const api = {
   titulares: {
     listar: () => http('/clientes/titulares'),
@@ -31,6 +30,7 @@ export const api = {
   documentos: {
     listar: (clienteId: number) => http(`/clientes/${clienteId}/documentos`),
     criar: (clienteId: number, data: unknown) => http(`/clientes/${clienteId}/documentos`, { method: 'POST', body: JSON.stringify(data) }),
+    editar: (id: number, data: unknown) => http(`/documentos/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     excluir: (id: number) => http(`/documentos/${id}`, { method: 'DELETE' }),
   },
   endereco: {

@@ -7,7 +7,6 @@ import {
 
 export class ClienteService {
 
-
   async listarTitulares() {
     return prisma.cliente.findMany({
       where: { titularId: null },
@@ -51,22 +50,34 @@ export class ClienteService {
   }
 
   async cadastrarTitular(dto: CadastrarTitularDTO) {
-    // Regra: nome único entre titulares
     const existe = await prisma.cliente.findFirst({
       where: { nome: dto.nome, titularId: null },
     })
     if (existe) throw new Error('Já existe um titular cadastrado com esse nome')
 
     return prisma.cliente.create({
-      data: {
-        nome: dto.nome,
-        nomeSocial: dto.nomeSocial,
-        dataNascimento: new Date(dto.dataNascimento),
-        endereco: dto.endereco ? { create: dto.endereco } : undefined,
-        telefones: dto.telefones?.length ? { create: dto.telefones } : undefined,
-      },
-      include: { endereco: true, telefones: true },
-    })
+    data: {
+      nome: dto.nome,
+      nomeSocial: dto.nomeSocial,
+      dataNascimento: new Date(dto.dataNascimento),
+      endereco: dto.endereco ? { create: dto.endereco } : undefined,
+      telefones: dto.telefones?.length ? { create: dto.telefones } : undefined,
+      documentos: dto.documentos?.length
+        ? {
+            create: dto.documentos.map(doc => ({
+              numero: doc.numero,
+              tipo: doc.tipo,
+              dataExpedicao: new Date(doc.dataExpedicao),
+            })),
+          }
+        : undefined,
+    },
+    include: {
+      endereco: true,
+      telefones: true,
+      documentos: true,
+    },
+  })
   }
 
   async editarTitular(id: number, dto: EditarClienteDTO) {
@@ -103,6 +114,23 @@ export class ClienteService {
       }
     }
 
+    if (dto.documentos) {
+  await prisma.documento.deleteMany({
+    where: { clienteId: id },
+  })
+
+    if (dto.documentos.length > 0) {
+      await prisma.documento.createMany({
+        data: dto.documentos.map(doc => ({
+          clienteId: id,
+          numero: doc.numero,
+          tipo: doc.tipo,
+          dataExpedicao: new Date(doc.dataExpedicao),
+        })),
+      })
+    }
+  }
+
     return prisma.cliente.findUnique({
       where: { id },
       include: { endereco: true, telefones: true, documentos: true },
@@ -112,11 +140,8 @@ export class ClienteService {
   async excluirTitular(id: number) {
     const existe = await prisma.cliente.findFirst({ where: { id, titularId: null } })
     if (!existe) throw new Error('Titular não encontrado')
-    // Cascade no schema remove dependentes, documentos, endereço e telefones
     await prisma.cliente.delete({ where: { id } })
   }
-
-  // ─── DEPENDENTES ────────────────────────────────────────────────────────────
 
   async listarTodosDependentes() {
     return prisma.cliente.findMany({
@@ -181,8 +206,21 @@ export class ClienteService {
         titularId,
         endereco: dto.endereco ? { create: dto.endereco } : undefined,
         telefones: dto.telefones?.length ? { create: dto.telefones } : undefined,
+        documentos: dto.documentos?.length
+  ? {
+      create: dto.documentos.map(doc => ({
+        numero: doc.numero,
+        tipo: doc.tipo,
+        dataExpedicao: new Date(doc.dataExpedicao),
+      })),
+    }
+  : undefined,
       },
-      include: { endereco: true, telefones: true },
+      include: {
+      endereco: true,
+      telefones: true,
+      documentos: true,
+    },
     })
   }
 
@@ -221,6 +259,22 @@ export class ClienteService {
         }
       }
     }
+    if (dto.documentos) {
+  await prisma.documento.deleteMany({
+    where: { clienteId: dependenteId },
+  })
+
+  if (dto.documentos.length > 0) {
+    await prisma.documento.createMany({
+      data: dto.documentos.map(doc => ({
+        clienteId: dependenteId,
+        numero: doc.numero,
+        tipo: doc.tipo,
+        dataExpedicao: new Date(doc.dataExpedicao),
+      })),
+    })
+  }
+}
 
     return prisma.cliente.findUnique({
       where: { id: dependenteId },
@@ -248,12 +302,18 @@ export class ClienteService {
   // ─── ACOMODADOS ─────────────────────────────────────────────────────────────
 
   async listarAcomodados() {
+    // Busca titulares que estejam acomodados OU que tenham dependentes acomodados
     return prisma.cliente.findMany({
-      where: { acomodacaoId: { not: null }, titularId: null },
+      where: {
+        titularId: null,
+        OR: [
+          { acomodacaoId: { not: null } },
+          { dependentes: { some: { acomodacaoId: { not: null } } } },
+        ],
+      },
       include: {
         acomodacao: true,
         dependentes: {
-          where: { acomodacaoId: { not: null } },
           include: { acomodacao: true },
         },
       },

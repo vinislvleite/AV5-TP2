@@ -40,8 +40,8 @@ export default function Acomodados() {
                   <div>
                     <div style={{ fontWeight: 600, fontSize: 15 }}>{t.nome}</div>
                     <div style={{ color: 'var(--text2)', fontSize: 12, marginTop: 2 }}>
-                      Acomodação: <span style={{ color: 'var(--accent)' }}>
-                        {t.acomodacao ? nomeLabel[t.acomodacao.nome] : '—'}
+                      Acomodação: <span style={{ color: t.acomodacao ? 'var(--accent)' : 'var(--text3)' }}>
+                        {t.acomodacao ? nomeLabel[t.acomodacao.nome] : 'Titular não acomodado'}
                       </span>
                     </div>
 

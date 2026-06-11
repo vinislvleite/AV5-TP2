@@ -3,8 +3,6 @@ import { ClienteService } from '../services/cliente.service'
 
 const service = new ClienteService()
 
-// ─── TITULARES ────────────────────────────────────────────────────────────────
-
 export const listarTitulares = async (_req: Request, res: Response) => {
   try {
     const data = await service.listarTitulares()
@@ -49,8 +47,6 @@ export const excluirTitular = async (req: Request, res: Response) => {
     res.status(404).json({ erro: e.message })
   }
 }
-
-// ─── DEPENDENTES ─────────────────────────────────────────────────────────────
 
 export const listarTodosDependentes = async (_req: Request, res: Response) => {
   try {
@@ -112,8 +108,6 @@ export const excluirDependente = async (req: Request, res: Response) => {
     res.status(404).json({ erro: e.message })
   }
 }
-
-// ─── ACOMODADOS ───────────────────────────────────────────────────────────────
 
 export const listarAcomodados = async (_req: Request, res: Response) => {
   try {

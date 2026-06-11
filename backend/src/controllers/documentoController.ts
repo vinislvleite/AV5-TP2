@@ -19,6 +19,24 @@ export const cadastrarDocumento = async (req: Request, res: Response) => {
   }
 }
 
+export const editarDocumento = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const documento = await service.editarDocumento(
+      Number(req.params.id),
+      req.body
+    )
+
+    res.json(documento)
+  } catch (e: any) {
+    res.status(404).json({
+      erro: e.message,
+    })
+  }
+}
+
 export const excluirDocumento = async (req: Request, res: Response) => {
   try {
     await service.excluirDocumento(Number(req.params.id))

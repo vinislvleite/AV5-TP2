@@ -39,7 +39,7 @@ export function Button({
   children, onClick, variant = 'primary', size = 'md', disabled, style, type = 'button'
 }: {
   children: React.ReactNode
-  onClick?: () => void
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
   size?: 'sm' | 'md'
   disabled?: boolean
@@ -224,14 +224,13 @@ export function Modal({ title, children, onClose }: {
   )
 }
 
-// ─── EmptyState ───────────────────────────────────────────────────────────────
 export function EmptyState({ message }: { message: string }) {
   return (
     <div style={{
       textAlign: 'center', padding: '48px 24px',
       color: 'var(--text3)', fontSize: 14,
     }}>
-      <div style={{ fontSize: 36, marginBottom: 12 }}>🏨</div>
+      <div style={{ fontSize: 36, marginBottom: 12 }}></div>
       {message}
     </div>
   )

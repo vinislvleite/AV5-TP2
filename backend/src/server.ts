@@ -23,5 +23,5 @@ app.get('/api/health', (_req, res) => {
 })
 
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor Atlantis rodando na porta ${PORT}`)
+  console.log(`Servidor Atlantis rodando na porta ${PORT}`)
 })

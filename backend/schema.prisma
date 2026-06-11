@@ -13,17 +13,12 @@ model Cliente {
   nomeSocial     String
   dataNascimento DateTime
   dataCadastro   DateTime    @default(now())
-
-  // Auto-referência: titular -> dependentes
   titularId      Int?
   titular        Cliente?    @relation("TitularDependentes", fields: [titularId], references: [id], onDelete: Cascade)
   dependentes    Cliente[]   @relation("TitularDependentes")
-
   telefones      Telefone[]
   endereco       Endereco?
   documentos     Documento[]
-
-  // Vários clientes (titular + dependentes) podem estar na mesma acomodação
   acomodacaoId   Int?
   acomodacao     Acomodacao? @relation(fields: [acomodacaoId], references: [id], onDelete: SetNull)
 
@@ -73,8 +68,6 @@ model Acomodacao {
   suite        Int
   climatizacao Boolean
   garagem      Int
-
-  // Uma acomodação pode ter titular + dependentes hospedados
   clientes     Cliente[]
 
   @@map("acomodacoes")
