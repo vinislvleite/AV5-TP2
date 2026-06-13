@@ -46,7 +46,6 @@ input, select, textarea {
   border: none;
 }
 
-/* scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: var(--bg2); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }

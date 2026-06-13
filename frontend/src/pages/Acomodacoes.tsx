@@ -18,7 +18,6 @@ const nomeOptions = [
 
 const nomeLabel: Record<string, string> = Object.fromEntries(nomeOptions.map(o => [o.value, o.label]))
 
-// Specs fixas por tipo — espelho da Tabela 1
 const SPECS: Record<string, { camaSolteiro: number; camaCasal: number; suite: number; climatizacao: boolean; garagem: number }> = {
   CASAL_SIMPLES:    { camaSolteiro: 0, camaCasal: 1, suite: 1, climatizacao: true, garagem: 1 },
   FAMILIA_SIMPLES:  { camaSolteiro: 2, camaCasal: 1, suite: 1, climatizacao: true, garagem: 1 },
@@ -154,7 +153,6 @@ export default function Acomodacoes() {
                   <Badge label={ocupada ? 'Ocupada' : 'Livre'} color={ocupada ? 'warning' : 'success'} />
                 </div>
 
-                {/* Specs read-only */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
                   {[
                     { label: 'Cama Solteiro', val: a.camaSolteiro },
@@ -204,7 +202,6 @@ export default function Acomodacoes() {
         </div>
       )}
 
-      {/* Modal criar — só select de tipo */}
       {showModal && (
         <Modal title="Nova Acomodação" onClose={() => { setShowModal(false); setNomeSelected('') }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -216,7 +213,6 @@ export default function Acomodacoes() {
               required
             />
 
-            {/* Preview read-only das specs */}
             {specs && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                 {[
@@ -249,7 +245,6 @@ export default function Acomodacoes() {
         </Modal>
       )}
 
-      {/* Modal vincular */}
       {showVincular && (
         <Modal title="Vincular Acomodação" onClose={() => setShowVincular(false)}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

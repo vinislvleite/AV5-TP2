@@ -299,10 +299,7 @@ export class ClienteService {
     await prisma.cliente.delete({ where: { id: dependenteId } })
   }
 
-  // ─── ACOMODADOS ─────────────────────────────────────────────────────────────
-
   async listarAcomodados() {
-    // Busca titulares que estejam acomodados OU que tenham dependentes acomodados
     return prisma.cliente.findMany({
       where: {
         titularId: null,

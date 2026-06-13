@@ -44,7 +44,7 @@ export default function Dashboard() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        {/* Últimos titulares */}
+
         <Card>
           <h2 style={{ fontFamily: 'var(--font-head)', fontSize: 15, fontWeight: 600, marginBottom: 16 }}>
             Últimos Titulares
@@ -75,7 +75,6 @@ export default function Dashboard() {
           )}
         </Card>
 
-        {/* Acomodações */}
         <Card>
           <h2 style={{ fontFamily: 'var(--font-head)', fontSize: 15, fontWeight: 600, marginBottom: 16 }}>
             Acomodações Disponíveis

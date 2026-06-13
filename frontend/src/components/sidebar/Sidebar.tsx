@@ -27,7 +27,6 @@ export default function Sidebar() {
       bottom: 0,
       zIndex: 100,
     }}>
-      {/* Logo */}
       <div style={{
         padding: '28px 24px 20px',
         borderBottom: '1px solid var(--border)',
@@ -46,7 +45,6 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Nav */}
       <nav style={{ flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
         {links.map(({ to, label, icon: Icon }) => (
           <NavLink
@@ -73,7 +71,6 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Footer */}
       <div style={{ padding: '16px 12px', borderTop: '1px solid var(--border)' }}>
         <div style={{
           display: 'flex',

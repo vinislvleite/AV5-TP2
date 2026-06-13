@@ -1,6 +1,5 @@
 import React from 'react'
 
-// ─── Card ─────────────────────────────────────────────────────────────────────
 export function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div style={{
@@ -15,7 +14,6 @@ export function Card({ children, style }: { children: React.ReactNode; style?: R
   )
 }
 
-// ─── PageHeader ───────────────────────────────────────────────────────────────
 export function PageHeader({ title, subtitle, action }: {
   title: string
   subtitle?: string
@@ -34,7 +32,6 @@ export function PageHeader({ title, subtitle, action }: {
   )
 }
 
-// ─── Button ───────────────────────────────────────────────────────────────────
 export function Button({
   children, onClick, variant = 'primary', size = 'md', disabled, style, type = 'button'
 }: {
@@ -80,7 +77,6 @@ export function Button({
   )
 }
 
-// ─── Input ────────────────────────────────────────────────────────────────────
 export function Input({
   label, value, onChange, placeholder, type = 'text', required
 }: {
@@ -119,7 +115,6 @@ export function Input({
   )
 }
 
-// ─── Select ───────────────────────────────────────────────────────────────────
 export function Select({
   label, value, onChange, options, required
 }: {
@@ -158,7 +153,6 @@ export function Select({
   )
 }
 
-// ─── Badge ────────────────────────────────────────────────────────────────────
 export function Badge({ label, color = 'accent' }: { label: string; color?: 'accent' | 'success' | 'danger' | 'warning' | 'neutral' }) {
   const colors = {
     accent: { bg: 'var(--accent-glow)', color: 'var(--accent)' },
@@ -182,7 +176,6 @@ export function Badge({ label, color = 'accent' }: { label: string; color?: 'acc
   )
 }
 
-// ─── Modal ────────────────────────────────────────────────────────────────────
 export function Modal({ title, children, onClose }: {
   title: string
   children: React.ReactNode
@@ -236,7 +229,6 @@ export function EmptyState({ message }: { message: string }) {
   )
 }
 
-// ─── Toast ────────────────────────────────────────────────────────────────────
 export function Toast({ message, type, onClose }: {
   message: string
   type: 'success' | 'error'
@@ -265,7 +257,6 @@ export function Toast({ message, type, onClose }: {
   )
 }
 
-// ─── FormGrid ─────────────────────────────────────────────────────────────────
 export function FormGrid({ children, cols = 2 }: { children: React.ReactNode; cols?: number }) {
   return (
     <div style={{
@@ -278,7 +269,6 @@ export function FormGrid({ children, cols = 2 }: { children: React.ReactNode; co
   )
 }
 
-// ─── Divider ──────────────────────────────────────────────────────────────────
 export function Divider({ label }: { label?: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '8px 0' }}>
@@ -289,7 +279,6 @@ export function Divider({ label }: { label?: string }) {
   )
 }
 
-// ─── StatCard ─────────────────────────────────────────────────────────────────
 export function StatCard({ label, value, icon }: { label: string; value: number | string; icon: React.ReactNode }) {
   return (
     <Card>
