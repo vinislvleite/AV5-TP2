@@ -103,3 +103,5 @@ npm run dev
 ```
 
 Tudo pronto! A aplicação web do sistema Atlantis agora estará acessível no seu navegador, conectada diretamente ao banco de dados estruturado.
+
+### Easter Egg: erick santos champions
