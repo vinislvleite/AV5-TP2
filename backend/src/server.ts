@@ -2,6 +2,8 @@ import express from 'express'
 import cors from 'cors'
 import 'dotenv/config'
 
+//erick santos champions
+
 import clienteRoutes from './routes/clienteRoutes'
 import documentoRoutes from './routes/documentoRoutes'
 import enderecoRoutes from './routes/enderecoRoutes'
